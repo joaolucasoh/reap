@@ -50,26 +50,19 @@ export class BasePage {
     await locator.click();
   }
 
-  /**
-   * Verifica se um elemento está visível
-   */
-  async isElementVisible(locator: Locator): Promise<boolean> {
-    try {
-      await expect(locator).toBeVisible({ timeout: 3000 });
-      return true;
-    } catch {
-      return false;
-    }
+  async isElementVisible(selectorOrLocator: string | Locator): Promise<boolean> {
+  try {
+    const locator = typeof selectorOrLocator === 'string'
+      ? this.page.locator(selectorOrLocator)
+      : selectorOrLocator;
+
+    await expect(locator).toBeVisible({ timeout: 30000 });
+    return true;
+  } catch {
+    return false;
   }
+}
 
-  /**
-   * Aguarda um tempo específico
-   */
-
-
-  /**
-   * Obtém o URL atual
-   */
   getCurrentUrl(): string {
     return this.page.url();
   }

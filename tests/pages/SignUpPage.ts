@@ -13,6 +13,7 @@ export class SignUpPage extends BasePage {
   private readonly firstNameTooltipIcon: Locator;
   private readonly lastNameTooltipIcon: Locator;
   private readonly tooltipContent: Locator;
+  private readonly togglePasswordBtn: Locator;
   passwordInput: Locator;
 
   constructor(page: Page) {
@@ -21,14 +22,14 @@ export class SignUpPage extends BasePage {
     this.emailInput = this.page.locator('input[type="email"]');
     this.firstNameInput = this.page.getByLabel(/first name/i);
     this.lastNameInput = this.page.getByLabel(/last name/i);
-    this.passwordInput = this.page.locator('input[type="password"]');
+    this.passwordInput = this.page.locator('#rp, input[name="password"]');
     this.submitButton = this.page.locator('button[type="submit"], button:has-text("Sign up"), button:has-text("Create account"), button:has-text("Start application")');
     this.signInLink = this.page.locator('a:has-text("Sign in"), a:has-text("Log in"), a:has-text("Login")');
-    // this.passwordXIcon = this.page.locator('.RyuIconSvg--x-square');
-    // this.passwordCheckIcon = this.page.locator('.RyuIconSvg--check-square');
     this.firstNameTooltipIcon = this.page.locator('.RyuIconSvg--info').first();
     this.lastNameTooltipIcon = this.page.locator('.RyuIconSvg--info').nth(1);
     this.tooltipContent = this.page.locator('.RyuScreenReaderOnly-dlAmnY');
+    this.togglePasswordBtn = page.getByRole('button', { name: /show password|hide password/i })
+    .or(page.locator('button[aria-label*="password" i], button[label*="password" i]'));
   }
 
   /**
@@ -47,6 +48,7 @@ export class SignUpPage extends BasePage {
 
   async fillEmail(email: string) {
     await this.fillField(this.emailInput, email);
+    return email;
   }
 
   async fillFirstName(firstName: string) {
@@ -61,15 +63,33 @@ export class SignUpPage extends BasePage {
     await this.fillField(this.passwordInput, password);
   }
 
-  async fillForm(userData: {
-    firstName: string;
-    lastName: string;
-    password: string;
-  }) {
-    await this.fillEmail(userData.email);
+  async fillForm(userData: { firstName: string; lastName: string; password: string }) {
+    const workEmail = await this.fillEmail(await this.generateRandomBusinessEmail());
     await this.fillFirstName(userData.firstName);
     await this.fillLastName(userData.lastName);
     await this.fillPassword(userData.password);
+    return workEmail;
+  }
+
+  getVerifyYourEmailLocators(email: string) {
+    const heading = this.page.getByRole('heading', { name: /verify your email/i });
+    const message = this.page.getByText(`Click the link in the confirmation email sent to ${email} to verify your account and continue with the application.`)
+    const link    = this.page.getByRole('link', { name: /verify your Ramp account/i });
+    return { heading, message, link };
+  }
+  async getVerifyYourEmailMsg(emailCreated: string, timeout = 30000): Promise<boolean> {
+    const { heading, message, link } = this.getVerifyYourEmailLocators(emailCreated);
+
+    try {
+      await Promise.all([
+        heading.waitFor({ state: 'visible', timeout }),
+        message.waitFor({ state: 'visible', timeout }),
+        link.waitFor({ state: 'visible', timeout })
+      ]);
+      return true;
+    } catch {
+      return false;
+    }
   }
 
   async submitForm() {
@@ -78,6 +98,34 @@ export class SignUpPage extends BasePage {
     }
   }
 
+  
+  async typePassword(pwd: string) {
+    await this.passwordInput.fill('');
+    await this.passwordInput.focus();
+    await this.passwordInput.type(pwd, { delay: 10 });
+}
+
+  async clickTogglePassword() {
+    await this.togglePasswordBtn.first().click();
+  }
+
+  async isPasswordMasked(): Promise<boolean> {
+    const type = await this.passwordInput.getAttribute('type');
+    return type === 'password';
+  }
+
+  async isPasswordVisible(): Promise<boolean> {
+    const type = await this.passwordInput.getAttribute('type');
+    return type === 'text';
+  }
+
+  async getPasswordValue(): Promise<string> {
+    return this.passwordInput.inputValue();
+}
+
+async getInputType(): Promise<string | null> {
+  return this.passwordInput.first().getAttribute('type');
+}
   async testInvalidEmail(invalidEmail: string) {
     await this.fillEmail(invalidEmail);
     
@@ -180,21 +228,14 @@ export class SignUpPage extends BasePage {
     return await this.lastNameInput.inputValue();
   }
 
-  /**
-   * Obtém o valor atual do campo senha
-   */
-  async getPasswordValue(): Promise<string> {
-    return await this.passwordInput.inputValue();
+  async wasRedirectedAfterSubmission(timeout = 60000): Promise<boolean> {
+    try {
+      await this.page.waitForURL('https://app.ramp.com/verify-email', { timeout });
+      return true;
+    } catch {}
+    return false;
   }
 
-  async wasRedirectedAfterSubmission(): Promise<boolean> {
-    const currentUrl = this.getCurrentUrl();
-    return currentUrl === 'https://app.ramp.com/verify-email';
-  }
-
-  /**
-   * Dados de teste padrão para formulário válido
-   */
   getValidTestData() {
     return {
       email: 'teste@exemplo.com',
@@ -327,10 +368,7 @@ export class SignUpPage extends BasePage {
     return tooltipText?.includes('Your legal last name as listed on a driver\'s license, passport, etc') || false;
   }
 
-  /**
-   * Gera um email corporativo aleatório
-   */
-  generateRandomBusinessEmail(): string {
+  async generateRandomBusinessEmail(): Promise<string> {
     const randomNum = Math.floor(Math.random() * 1000) + 1;
     return `test@work${randomNum}.com`;
   }
