@@ -1,19 +1,13 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
 
-/**
- * Page Object para a página de Sign Up da Ramp
- * Contém todos os seletores e métodos específicos para registro
- */
 export class SignUpPage extends BasePage {
-  // Seletores dos elementos da página
   private readonly emailInput: Locator;
   private readonly firstNameInput: Locator;
   private readonly lastNameInput: Locator;
   private readonly passwordInput: Locator;
   private readonly submitButton: Locator;
   private readonly signInLink: Locator;
-  private readonly errorMessages: Locator;
   private readonly validationIcons: Locator;
   private readonly successIcons: Locator;
   private readonly firstNameTooltipIcon: Locator;
@@ -23,14 +17,12 @@ export class SignUpPage extends BasePage {
   constructor(page: Page) {
     super(page, 'https://app.ramp.com');
     
-    // Inicializar seletores
     this.emailInput = this.page.locator('input[type="email"]');
     this.firstNameInput = this.page.getByLabel(/first name/i);
     this.lastNameInput = this.page.getByLabel(/last name/i);
     this.passwordInput = this.page.locator('input[type="password"]');
     this.submitButton = this.page.locator('button[type="submit"], button:has-text("Sign up"), button:has-text("Create account"), button:has-text("Start application")');
     this.signInLink = this.page.locator('a:has-text("Sign in"), a:has-text("Log in"), a:has-text("Login")');
-    this.errorMessages = this.page.locator('[role="alert"], .error, .invalid, [aria-invalid="true"]');
     this.validationIcons = this.page.locator('.RyuIconSvg--x-square');
     this.successIcons = this.page.locator('.RyuIconSvg--check-square');
     this.firstNameTooltipIcon = this.page.locator('.RyuIconSvg--info').first();
@@ -83,9 +75,6 @@ export class SignUpPage extends BasePage {
     await this.fillField(this.passwordInput, password);
   }
 
-  /**
-   * Preenche todos os campos do formulário
-   */
   async fillForm(userData: {
     email: string;
     firstName: string;
@@ -98,24 +87,19 @@ export class SignUpPage extends BasePage {
     await this.fillPassword(userData.password);
   }
 
-  /**
-   * Submete o formulário de registro
-   */
   async submitForm() {
     if (await this.isElementVisible(this.submitButton)) {
       await this.clickElement(this.submitButton);
     }
   }
 
-  /**
-   * Testa validação de email inválido
-   */
   async testInvalidEmail(invalidEmail: string) {
     await this.fillEmail(invalidEmail);
-    await this.emailInput.blur();
     
-    const isInvalid = await this.emailInput.getAttribute('aria-invalid');
-    return isInvalid === 'true';
+    await this.submitForm();
+    
+    const count = await this.page.getByText('Invalid email address').count();
+    return count > 0;
   }
 
   /**
@@ -125,16 +109,33 @@ export class SignUpPage extends BasePage {
     await this.fillPassword(weakPassword);
     await this.passwordInput.blur();
     
-    // Verifica se há indicação de senha inválida
     const passwordError = this.page.locator('text=/at least.*characters/i, text=/password.*requirements/i, [aria-invalid="true"]');
     return await this.isElementVisible(passwordError);
   }
 
-  /**
-   * Verifica se há mensagens de erro de validação
-   */
-  async hasValidationErrors(): Promise<boolean> {
-    return await this.isElementVisible(this.errorMessages);
+  async hasErrorMessage(): Promise<boolean> {
+    const errorMsgs = [
+      'Enter an email address',
+      'First name is required',
+      'Last name is required'
+    ];
+
+    const notFound: string[] = [];
+
+    for (const msg of errorMsgs) {
+      const count = await this.page.getByText(msg).count();
+      if (count === 0) {
+        console.warn(`Error message not found: ${msg}`);
+        notFound.push(msg);
+      } else {
+        console.log(`Error message found: ${msg}`);
+      }
+    }
+    if (notFound.length > 0) {
+      console.warn(`The following error messages were not found: ${notFound.join(', ')}`);
+      return false;
+    }
+    return true;
   }
 
   /**

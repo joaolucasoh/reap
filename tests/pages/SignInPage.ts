@@ -15,6 +15,7 @@ export class SignInPage extends BasePage {
   private readonly signInWithChromeButton: Locator;
   private readonly emailMeALinkButton: Locator;
   private readonly errorMessages: Locator;
+  private readonly signUpLink: Locator;
 
 
   constructor(page: Page) {
@@ -28,6 +29,7 @@ export class SignInPage extends BasePage {
     this.resetPasswordLink = this.page.locator('a:has-text("Reset Password")');
     this.signInWithChromeButton = this.page.locator('button:has-text("Sign in with Google")');
     this.emailMeALinkButton = this.page.locator('button:has-text("Email me a link")');
+    this.signUpLink = this.page.locator('data-test-id=sign-up-link');
   }
 
   async navigate(): Promise<void> {
@@ -37,7 +39,8 @@ export class SignInPage extends BasePage {
 
   async verifyLoginFieldsPresent() {
     await this.waitForElement(this.emailInput);
-    await this.waitForElement(this.passwordInput);
+    await this.waitForElement(this.signInButton);
+    await this.waitForElement(this.signUpLink);
   }
 
   /**
@@ -65,12 +68,9 @@ export class SignInPage extends BasePage {
     await this.fillPassword(credentials.password);
   }
 
-  /**
-   * Submete o formulário de login
-   */
   async submitLogin() {
-    if (await this.isElementVisible(this.submitButton)) {
-      await this.clickElement(this.submitButton);
+    if (await this.isElementVisible(this.signInButton)) {
+      await this.clickElement(this.signInButton);
     }
   }
 
@@ -101,7 +101,7 @@ export class SignInPage extends BasePage {
    */
   async testEmptyEmailValidation() {
     await this.fillEmail('');
-    await this.fillPassword('senha123');
+    await this.fillPassword('');
     await this.submitLogin();
     
     return await this.hasValidationErrors();
@@ -153,8 +153,8 @@ export class SignInPage extends BasePage {
    * Clica no link de esqueci minha senha
    */
   async clickForgotPassword() {
-    if (await this.isElementVisible(this.forgotPasswordLink)) {
-      await this.clickElement(this.forgotPasswordLink);
+    if (await this.isElementVisible(this.resetPasswordLink)) {
+      await this.clickElement(this.resetPasswordLink);
       await this.page.waitForLoadState('networkidle');
     }
   }
@@ -163,7 +163,7 @@ export class SignInPage extends BasePage {
    * Verifica se o link de esqueci minha senha está presente
    */
   async hasForgotPasswordLink(): Promise<boolean> {
-    return await this.isElementVisible(this.forgotPasswordLink);
+    return await this.isElementVisible(this.resetPasswordLink);
   }
 
   /**

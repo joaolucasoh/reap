@@ -13,31 +13,29 @@ test.describe('Ramp Authentication', () => {
 
   test.describe('Sign Up Page', () => {
     test('should display sign up form with all required fields', async ({ page }) => {
-      // Verificar se a página carregou corretamente e tem o h2 "Apply for Ramp"
       const hasHeading = await signUpPage.hasApplyForRampHeading();
       expect(hasHeading).toBe(true);
-      
-      // Verificar se todos os campos obrigatórios estão presentes
+
       await signUpPage.verifyRequiredFieldsPresent();
     });
 
     test('should show validation errors for empty required fields', async ({ page }) => {
-      // Tentar submeter o formulário sem preencher os campos
       await signUpPage.submitForm();
       
-      // Verificar se há mensagens de erro de validação
-      const hasErrors = await signUpPage.hasValidationErrors();
+      const hasErrors = await signUpPage.hasErrorMessage();
       expect(hasErrors).toBeTruthy();
     });
 
     test('should validate email format', async ({ page }) => {
-      // Testar email inválido
-      const isInvalid = await signUpPage.testInvalidEmail(TEST_DATA.INVALID_EMAIL);
-      expect(isInvalid).toBeTruthy();
+      const invalidEmails = ["abc", "abc@", "abc@c", "abc@a."];
+
+      for (const email of invalidEmails) {
+        const isInvalid = await signUpPage.testInvalidEmail(email);
+        expect(isInvalid, `The email "${email}" didn't shows the expected error message.`).toBeTruthy();
+      }
     });
 
     test('should validate password requirements', async ({ page }) => {
-      // Testar senha fraca
       const hasPasswordError = await signUpPage.testWeakPassword(TEST_DATA.WEAK_PASSWORD);
       expect(hasPasswordError).toBeTruthy();
     });
@@ -97,12 +95,12 @@ test.describe('Ramp Authentication', () => {
       await signInPage.verifyLoginFieldsPresent();
     });
 
-    test('should validate sign in form fields', async ({ page }) => {
-      await signInPage.navigate();
+    test('should validate sign up form fields', async ({ page }) => {
+      await signUpPage.navigate();
       
       // Testar validação de email vazio
-      const hasValidationError = await signInPage.testEmptyEmailValidation();
-      expect(hasValidationError).toBeTruthy();
+      await signUpPage.submitForm();
+      expect(signUpPage.errorValidationAfterEmptyFormSent()).toBeTruthy();
     });
 
     test('should attempt sign in with test credentials', async ({ page }) => {

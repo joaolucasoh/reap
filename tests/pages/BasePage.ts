@@ -74,38 +74,10 @@ export class BasePage {
     return this.page.url();
   }
 
-  /**
-   * Verifica se há mensagens de erro na página
-   */
-  async hasErrorMessage(): Promise<boolean> {
-    const errorSelectors = [
-      '[role="alert"]',
-      '.error',
-      '.invalid',
-      '[aria-invalid="true"]',
-      '.notification--error',
-      '.alert-error'
-    ];
-
-    for (const selector of errorSelectors) {
-      const element = this.page.locator(selector);
-      if (await this.isElementVisible(element)) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
-   * Define o viewport para teste de responsividade
-   */
   async setMobileViewport() {
     await this.page.setViewportSize({ width: 375, height: 667 });
   }
 
-  /**
-   * Define o viewport para desktop
-   */
   async setDesktopViewport() {
     await this.page.setViewportSize({ width: 1280, height: 720 });
   }
