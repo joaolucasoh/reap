@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { SignUpPage, SignInPage, TEST_DATA } from './pages';
+import { PASSWORD_DATASETS, PASSWORD_RULES, type RuleText } from './pages/index';
 
 test.describe('Ramp Authentication', () => {
   let signUpPage: SignUpPage;
@@ -26,7 +27,7 @@ test.describe('Ramp Authentication', () => {
       expect(hasErrors).toBeTruthy();
     });
 
-    test('should validate email format', async ({ page }) => {
+    test('should validate email format', async () => {
       const invalidEmails = ["abc", "abc@", "abc@c", "abc@a."];
 
       for (const email of invalidEmails) {
@@ -35,16 +36,36 @@ test.describe('Ramp Authentication', () => {
       }
     });
 
-    test('should validate password requirements', async ({ page }) => {
-      const hasPasswordError = await signUpPage.testWeakPassword(TEST_DATA.WEAK_PASSWORD);
-      expect(hasPasswordError).toBeTruthy();
+    test('should validate password requirements', async () => {
+      for (const ds of PASSWORD_DATASETS) {
+        const got = await signUpPage.testWeakPassword(ds.password);
+        const mismatches: string[] = [];
+        const missings: string[] = [];
+
+        for (const rule of PASSWORD_RULES) {
+          const expected = ds.expected[rule];
+          const actual = got[rule];
+
+          if (actual === 'missing') {
+            missings.push(`- Rule "${rule}" not found in UI`);
+          } else if (actual !== expected) {
+            mismatches.push(`- Rule "${rule}" expected to be "${expected}" but got "${actual}"`);
+          }
+        }
+        const problems = [...mismatches, ...missings];
+        for( const rule of PASSWORD_RULES ) {
+          const expected = ds.expected[rule];
+          const actual = got[rule];
+          if (actual !== expected) {
+            problems.push(`- Rule "${rule}" expected to be "${expected}" but got "${actual}"`);
+          }
+        }
+      }
     });
 
     test('should fill form with valid data', async ({ page }) => {
-      // Preencher todos os campos com dados válidos
       await signUpPage.fillForm(TEST_DATA.VALID_USER);
       
-      // Verificar se os campos foram preenchidos corretamente
       expect(await signUpPage.getEmailValue()).toBe(TEST_DATA.VALID_USER.email);
       expect(await signUpPage.getFirstNameValue()).toBe(TEST_DATA.VALID_USER.firstName);
       expect(await signUpPage.getLastNameValue()).toBe(TEST_DATA.VALID_USER.lastName);
@@ -52,18 +73,12 @@ test.describe('Ramp Authentication', () => {
     });
 
     test('should attempt form submission with valid data', async ({ page }) => {
-      // Preencher formulário com dados válidos
       await signUpPage.fillForm(TEST_DATA.VALID_USER);
-      
-      // Submeter o formulário
+
       await signUpPage.submitForm();
       
-      // Verificar se houve resposta do sistema (redirecionamento ou erro)
       const wasRedirected = await signUpPage.wasRedirectedAfterSubmission();
-      const hasErrorMessage = await signUpPage.hasErrorMessage();
-      
-      // O teste passa se houve redirecionamento OU se apareceu uma mensagem de erro esperada
-      expect(wasRedirected || hasErrorMessage).toBeTruthy();
+      expect(wasRedirected ).toBeTruthy();
     });
   });
 

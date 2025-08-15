@@ -1,11 +1,11 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
+import { PASSWORD_RULES, type RuleText } from './index';
 
 export class SignUpPage extends BasePage {
   private readonly emailInput: Locator;
   private readonly firstNameInput: Locator;
   private readonly lastNameInput: Locator;
-  private readonly passwordInput: Locator;
   private readonly submitButton: Locator;
   private readonly signInLink: Locator;
   private readonly validationIcons: Locator;
@@ -13,6 +13,7 @@ export class SignUpPage extends BasePage {
   private readonly firstNameTooltipIcon: Locator;
   private readonly lastNameTooltipIcon: Locator;
   private readonly tooltipContent: Locator;
+  passwordInput: Locator;
 
   constructor(page: Page) {
     super(page, 'https://app.ramp.com');
@@ -23,8 +24,8 @@ export class SignUpPage extends BasePage {
     this.passwordInput = this.page.locator('input[type="password"]');
     this.submitButton = this.page.locator('button[type="submit"], button:has-text("Sign up"), button:has-text("Create account"), button:has-text("Start application")');
     this.signInLink = this.page.locator('a:has-text("Sign in"), a:has-text("Log in"), a:has-text("Login")');
-    this.validationIcons = this.page.locator('.RyuIconSvg--x-square');
-    this.successIcons = this.page.locator('.RyuIconSvg--check-square');
+    // this.passwordXIcon = this.page.locator('.RyuIconSvg--x-square');
+    // this.passwordCheckIcon = this.page.locator('.RyuIconSvg--check-square');
     this.firstNameTooltipIcon = this.page.locator('.RyuIconSvg--info').first();
     this.lastNameTooltipIcon = this.page.locator('.RyuIconSvg--info').nth(1);
     this.tooltipContent = this.page.locator('.RyuScreenReaderOnly-dlAmnY');
@@ -37,9 +38,6 @@ export class SignUpPage extends BasePage {
     await this.goto('/sign-up');
   }
 
-  /**
-   * Verifica se todos os campos obrigatórios estão presentes
-   */
   async verifyRequiredFieldsPresent() {
     await this.waitForElement(this.emailInput);
     await this.waitForElement(this.firstNameInput);
@@ -47,36 +45,23 @@ export class SignUpPage extends BasePage {
     await this.waitForElement(this.passwordInput);
   }
 
-  /**
-   * Preenche o campo de email
-   */
   async fillEmail(email: string) {
     await this.fillField(this.emailInput, email);
   }
 
-  /**
-   * Preenche o campo de primeiro nome
-   */
   async fillFirstName(firstName: string) {
     await this.fillField(this.firstNameInput, firstName);
   }
 
-  /**
-   * Preenche o campo de último nome
-   */
   async fillLastName(lastName: string) {
     await this.fillField(this.lastNameInput, lastName);
   }
 
-  /**
-   * Preenche o campo de senha
-   */
   async fillPassword(password: string) {
     await this.fillField(this.passwordInput, password);
   }
 
   async fillForm(userData: {
-    email: string;
     firstName: string;
     lastName: string;
     password: string;
@@ -102,16 +87,35 @@ export class SignUpPage extends BasePage {
     return count > 0;
   }
 
-  /**
-   * Testa validação de senha fraca
-   */
-  async testWeakPassword(weakPassword: string) {
-    await this.fillPassword(weakPassword);
-    await this.passwordInput.blur();
-    
-    const passwordError = this.page.locator('text=/at least.*characters/i, text=/password.*requirements/i, [aria-invalid="true"]');
-    return await this.isElementVisible(passwordError);
+  async testWeakPassword(password: string): Promise<Record<RuleText, 'pass' | 'fail' | 'missing'>> {
+    await this.passwordInput.fill('');
+    await this.passwordInput.focus();
+    await this.page.keyboard.press(process.platform === 'darwin' ? 'Meta+A' : 'Control+A');
+    await this.page.keyboard.press('Backspace');
+    await this.passwordInput.type(password, { delay: 10 });
+
+    await this.fillPassword(password);
+
+    const ruleItem = (rule: RuleText) => this.page.locator(`p:has-text("${rule}")`);
+    const greenIcon = (rule: RuleText) => ruleItem(rule).locator('.RyuIconSvg--check-square');
+    const redIcon = (rule: RuleText) => ruleItem(rule).locator('.RyuIconSvg--x-square');
+
+    const status = {} as Record<RuleText, 'pass' | 'fail' | 'missing'>;
+
+    for (const rule of PASSWORD_RULES) {
+      const [isGreen, isRed] = await Promise.all([
+        greenIcon(rule).isVisible(),
+        redIcon(rule).isVisible(),
+      ]);
+
+      status[rule] =
+        isGreen && !isRed ? 'pass' :
+        isRed && !isGreen ? 'fail' :
+        'missing'
   }
+
+  return status;
+}
 
   async hasErrorMessage(): Promise<boolean> {
     const errorMsgs = [
@@ -183,12 +187,9 @@ export class SignUpPage extends BasePage {
     return await this.passwordInput.inputValue();
   }
 
-  /**
-   * Verifica se houve redirecionamento após submissão
-   */
   async wasRedirectedAfterSubmission(): Promise<boolean> {
     const currentUrl = this.getCurrentUrl();
-    return currentUrl !== 'https://app.ramp.com/sign-up';
+    return currentUrl === 'https://app.ramp.com/verify-email';
   }
 
   /**

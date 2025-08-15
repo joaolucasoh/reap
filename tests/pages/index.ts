@@ -41,3 +41,64 @@ export const TIMEOUTS = {
   NAVIGATION: 10000,
   FORM_SUBMISSION: 3000
 };
+
+export const PASSWORD_RULES = [
+  'At least 12 characters',
+  'At least 1 lowercase character',
+  'At least 1 uppercase character',
+  'At least 1 number',
+  'Not a commonly used password',
+] as const;
+
+export type RuleText = (typeof PASSWORD_RULES)[number];
+
+export const PASSWORD_DATASETS: Array<{
+  name: string;
+  password: string;
+  expected: Record<RuleText, 'pass' | 'fail'>;
+}> = [
+  {
+    name: 'WEAK_123',
+    password: '123',
+    expected: {
+      'At least 12 characters': 'fail',
+      'At least 1 lowercase character': 'fail',
+      'At least 1 uppercase character': 'fail',
+      'At least 1 number': 'pass',
+      'Not a commonly used password': 'fail',
+    },
+  },
+  {
+    name: 'LOWERCASE_12chars_no_number_no_upper',
+    password: 'aaaaaaaaaaaa',
+    expected: {
+      'At least 12 characters': 'pass',
+      'At least 1 lowercase character': 'pass',
+      'At least 1 uppercase character': 'fail',
+      'At least 1 number': 'fail',
+      'Not a commonly used password': 'pass',
+    },
+  },
+  {
+    name: 'MIXEDCASE_12chars_no_number',
+    password: 'AbcdefghijkL',
+    expected: {
+      'At least 12 characters': 'pass',
+      'At least 1 lowercase character': 'pass',
+      'At least 1 uppercase character': 'pass',
+      'At least 1 number': 'fail',
+      'Not a commonly used password': 'fail',
+    },
+  },
+  {
+    name: 'STRONG_valid_all_rules',
+    password: 'Abcd1234Efgh',
+    expected: {
+      'At least 12 characters': 'pass',
+      'At least 1 lowercase character': 'pass',
+      'At least 1 uppercase character': 'pass',
+      'At least 1 number': 'pass',
+      'Not a commonly used password': 'pass',
+    },
+  },
+];
