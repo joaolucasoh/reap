@@ -42,6 +42,14 @@ export const TIMEOUTS = {
   FORM_SUBMISSION: 3000
 };
 
+export const TOOLTIP_TEXTS = {
+  EMAIL: 'This is the email you are using to apply to Ramp',
+  FIRST_NAME: 'Your legal first name as listed on a driver’s license, passport, etc',
+  LAST_NAME: 'Your legal last name as listed on a driver’s license, passport, etc',
+  SHOW_PASSWORD: 'Show password',
+  HIDE_PASSWORD: 'Hide password'
+};
+
 export const PASSWORD_RULES = [
   'At least 12 characters',
   'At least 1 lowercase character',

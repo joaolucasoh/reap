@@ -10,9 +10,17 @@ export class SignUpPage extends BasePage {
   private readonly signInLink: Locator;
   private readonly validationIcons: Locator;
   private readonly successIcons: Locator;
-  private readonly firstNameTooltipIcon: Locator;
-  private readonly lastNameTooltipIcon: Locator;
-  private readonly tooltipContent: Locator;
+  readonly emailTooltip: Locator;
+  readonly emailTooltipIcon: Locator;
+  readonly firstNameTooltip: Locator;
+  readonly firstNameTooltipIcon: Locator;
+  readonly lastNameTooltip: Locator;
+  readonly lastNameTooltipIcon: Locator;
+  readonly showPwdTooltip: Locator;
+  readonly showPwdTooltipIcon: Locator
+  readonly hidePwdTooltip: Locator;
+  readonly hidePwdTooltipIcon: Locator;
+
   private readonly togglePasswordBtn: Locator;
   passwordInput: Locator;
 
@@ -25,16 +33,20 @@ export class SignUpPage extends BasePage {
     this.passwordInput = this.page.locator('#rp, input[name="password"]');
     this.submitButton = this.page.locator('button[type="submit"], button:has-text("Sign up"), button:has-text("Create account"), button:has-text("Start application")');
     this.signInLink = this.page.locator('a:has-text("Sign in"), a:has-text("Log in"), a:has-text("Login")');
-    this.firstNameTooltipIcon = this.page.locator('.RyuIconSvg--info').first();
+    this.emailTooltip     = this.page.locator('.RyuScreenReaderOnly-dlAmnY').nth(0);
+    this.emailTooltipIcon = this.page.locator('svg.RyuIconSvg--mail');
+    this.firstNameTooltip = this.page.locator('.RyuScreenReaderOnly-dlAmnY').nth(1);
+    this.firstNameTooltipIcon = this.page.locator('.RyuIconSvg--info').nth(0);
+    this.lastNameTooltip  = this.page.locator('.RyuScreenReaderOnly-dlAmnY').nth(2);
     this.lastNameTooltipIcon = this.page.locator('.RyuIconSvg--info').nth(1);
-    this.tooltipContent = this.page.locator('.RyuScreenReaderOnly-dlAmnY');
+    this.showPwdTooltip   = this.page.locator('.RyuScreenReaderOnly-dlAmnY').nth(3);
+    this.showPwdTooltipIcon   = this.page.locator('svg.RyuIconSvg--eye');
+    this.hidePwdTooltip   = this.page.locator('.RyuScreenReaderOnly-dlAmnY').nth(3);
+    this.hidePwdTooltipIcon   = this.page.locator('svg.RyuIconSvg--eye-off');
     this.togglePasswordBtn = page.getByRole('button', { name: /show password|hide password/i })
     .or(page.locator('button[aria-label*="password" i], button[label*="password" i]'));
   }
 
-  /**
-   * Navega para a página de sign up
-   */
   async navigate() {
     await this.goto('/sign-up');
   }
@@ -71,7 +83,7 @@ export class SignUpPage extends BasePage {
     return workEmail;
   }
 
-  getVerifyYourEmailLocators(email: string) {
+  async getVerifyYourEmailLocators(email: string) {
     const heading = this.page.getByRole('heading', { name: /verify your email/i });
     const message = this.page.getByText(`Click the link in the confirmation email sent to ${email} to verify your account and continue with the application.`)
     const link    = this.page.getByRole('link', { name: /verify your Ramp account/i });
@@ -190,9 +202,6 @@ async getInputType(): Promise<string | null> {
     return true;
   }
 
-  /**
-   * Clica no link para ir para página de sign in
-   */
   async goToSignIn() {
     if (await this.isElementVisible(this.signInLink)) {
       await this.clickElement(this.signInLink);
@@ -200,30 +209,18 @@ async getInputType(): Promise<string | null> {
     }
   }
 
-  /**
-   * Verifica se o link para sign in está presente
-   */
   async hasSignInLink(): Promise<boolean> {
     return await this.isElementVisible(this.signInLink);
   }
 
-  /**
-   * Obtém o valor atual do campo email
-   */
   async getEmailValue(): Promise<string> {
     return await this.emailInput.inputValue();
   }
 
-  /**
-   * Obtém o valor atual do campo primeiro nome
-   */
   async getFirstNameValue(): Promise<string> {
     return await this.firstNameInput.inputValue();
   }
 
-  /**
-   * Obtém o valor atual do campo último nome
-   */
   async getLastNameValue(): Promise<string> {
     return await this.lastNameInput.inputValue();
   }
@@ -236,35 +233,10 @@ async getInputType(): Promise<string | null> {
     return false;
   }
 
-  getValidTestData() {
-    return {
-      email: 'teste@exemplo.com',
-      firstName: 'João',
-      lastName: 'Silva',
-      password: 'MinhaSenh@123456'
-    };
-  }
-
-  /**
-   * Dados de teste para email inválido
-   */
-  getInvalidEmailData() {
-    return 'email-invalido';
-  }
-
-  /**
-   * Dados de teste para senha fraca
-   */
-  getWeakPasswordData() {
-    return '123';
-  }
-
   async isResponsive(): Promise<boolean> {
-    // Verificar se a página é responsiva
     const container = this.page.locator('body, main, .container');
     await container.first().waitFor({ state: 'visible' });
     
-    // Verificar se não há scroll horizontal
     const bodyWidth = await this.page.evaluate(() => document.body.scrollWidth);
     const viewportWidth = await this.page.evaluate(() => window.innerWidth);
     
@@ -279,13 +251,11 @@ async getInputType(): Promise<string | null> {
   }
 
   async hasProperPageStructure(): Promise<boolean> {
-    // Verificar elementos estruturais básicos
     const body = this.page.locator('body');
     const main = this.page.locator('main, .main, #main');
     
     const bodyVisible = await body.isVisible();
     
-    // Verificar se há pelo menos um elemento principal de conteúdo
     const mainCount = await main.count();
     const formCount = await this.page.locator('form').count();
     const containerCount = await this.page.locator('.container').count();
@@ -295,33 +265,21 @@ async getInputType(): Promise<string | null> {
     return bodyVisible && hasMainContent;
   }
 
-  /**
-   * Verifica se o h2 "Apply for Ramp" está presente na página
-   */
   async hasApplyForRampHeading(): Promise<boolean> {
     const heading = this.page.locator('h2:has-text("Apply for Ramp")');
     return await heading.isVisible();
   }
 
-  /**
-   * Verifica se há 5 ícones de validação (x-square) visíveis
-   */
   async hasValidationIcons(): Promise<boolean> {
     const count = await this.validationIcons.count();
     return count === 5;
   }
 
-  /**
-   * Verifica se há 5 ícones de sucesso (check-square) visíveis
-   */
   async hasSuccessIcons(): Promise<boolean> {
     const count = await this.successIcons.count();
     return count === 5;
   }
 
-  /**
-   * Verifica mensagens de erro específicas para campos vazios
-   */
   async hasEmptyFieldErrors(): Promise<boolean> {
     const emailError = await this.page.locator('text="Enter an email address"').isVisible();
     const firstNameError = await this.page.locator('text="First name is required"').isVisible();
@@ -329,43 +287,16 @@ async getInputType(): Promise<string | null> {
     return emailError && firstNameError && lastNameError;
   }
 
-  /**
-   * Verifica mensagem de email inválido
-   */
   async hasInvalidEmailError(): Promise<boolean> {
     return await this.page.locator('text="Invalid email address"').isVisible();
   }
 
-  /**
-   * Verifica mensagem de email pessoal (outlook.com)
-   */
   async hasOutlookEmailError(): Promise<boolean> {
     return await this.page.locator('text="Enter a valid business email (not outlook.com)"').isVisible();
   }
 
-  /**
-   * Verifica mensagem de email pessoal (gmail.com)
-   */
   async hasGmailEmailError(): Promise<boolean> {
     return await this.page.locator('text="Enter a valid business email (not gmail.com)"').isVisible();
-  }
-
-  /**
-   * Faz hover no ícone de tooltip do First Name e verifica a mensagem
-   */
-  async verifyFirstNameTooltip(): Promise<boolean> {
-    await this.firstNameTooltipIcon.hover();
-    const tooltipText = await this.tooltipContent.textContent();
-    return tooltipText?.includes('Your legal first name as listed on a driver\'s license, passport, etc') || false;
-  }
-
-  /**
-   * Faz hover no ícone de tooltip do Last Name e verifica a mensagem
-   */
-  async verifyLastNameTooltip(): Promise<boolean> {
-    await this.lastNameTooltipIcon.hover();
-    const tooltipText = await this.tooltipContent.textContent();
-    return tooltipText?.includes('Your legal last name as listed on a driver\'s license, passport, etc') || false;
   }
 
   async generateRandomBusinessEmail(): Promise<string> {
@@ -373,16 +304,10 @@ async getInputType(): Promise<string | null> {
     return `test@work${randomNum}.com`;
   }
 
-  /**
-   * Gera uma senha forte seguindo os critérios especificados
-   */
   generateStrongPassword(): string {
     return 'TestPassword123!';
   }
 
-  /**
-   * Verifica se foi redirecionado para sign-in com email preenchido e desabilitado
-   */
   async verifyRedirectToSignInWithEmail(email: string): Promise<boolean> {
     const currentUrl = this.page.url();
     const isSignInPage = currentUrl.includes('sign-in');

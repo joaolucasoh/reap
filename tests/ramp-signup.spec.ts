@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { SignUpPage, SignInPage, TEST_DATA } from './pages';
-import { PASSWORD_DATASETS, PASSWORD_RULES, type RuleText } from './pages/index';
+import { TOOLTIP_TEXTS, PASSWORD_DATASETS, PASSWORD_RULES, type RuleText } from './pages/index';
 
 test.describe('Ramp Sign Up', () => {
   let signUpPage: SignUpPage;
@@ -11,21 +11,21 @@ test.describe('Ramp Sign Up', () => {
   });
 
   test.describe('Sign Up Page', () => {
-    test.only('should display sign up form with all required fields', async ({ page }) => {
+    test('should display sign up form with all required fields', async ({ page }) => {
       const hasHeading = await signUpPage.hasApplyForRampHeading();
       expect(hasHeading).toBe(true);
 
       await signUpPage.verifyRequiredFieldsPresent();
     });
 
-    test.only('should show validation errors for empty required fields', async ({ page }) => {
+    test('should show validation errors for empty required fields', async ({ page }) => {
       await signUpPage.submitForm();
       
       const hasErrors = await signUpPage.hasErrorMessage();
       expect(hasErrors).toBeTruthy();
     });
 
-    test.only('should validate email format', async () => {
+    test('should validate email format', async () => {
       const invalidEmails = ["abc", "abc@", "abc@c", "abc@a."];
 
       for (const email of invalidEmails) {
@@ -34,7 +34,7 @@ test.describe('Ramp Sign Up', () => {
       }
     });
 
-    test.only('should validate password requirements', async () => {
+    test('should validate password requirements', async () => {
       for (const ds of PASSWORD_DATASETS) {
         const got = await signUpPage.testWeakPassword(ds.password);
         const mismatches: string[] = [];
@@ -61,7 +61,7 @@ test.describe('Ramp Sign Up', () => {
       }
     });
 
-    test.only('should validate enabling and disabling shows password', async ({ page }) => {
+    test('should validate enabling and disabling shows password', async ({ page }) => {
       const pwd = 'Test@password123';
 
       await signUpPage.typePassword(pwd);
@@ -78,7 +78,7 @@ test.describe('Ramp Sign Up', () => {
       await expect(field).toHaveAttribute('type', 'password', { timeout: 10_000 });
     });
 
-    test.only('should submit the form with valid data and ensure it was completed', async ({ page }) => {
+    test('should submit the form with valid data and ensure it was completed', async ({ page }) => {
       const emailCreated = await signUpPage.fillForm(TEST_DATA.VALID_USER);
 
       await signUpPage.submitForm();
@@ -87,6 +87,37 @@ test.describe('Ramp Sign Up', () => {
       expect(wasRedirected).toBeTruthy();
       
       expect(await signUpPage.getVerifyYourEmailMsg(emailCreated)).toBeTruthy();
-    })
+    });
+
+    test.only('should display tooltip messages', async ( { page }) => {
+      await signUpPage.emailTooltipIcon.hover();
+      await page.waitForTimeout(2000);
+      await expect(signUpPage.emailTooltip)
+        .toHaveText(TOOLTIP_TEXTS.EMAIL);
+      
+      await signUpPage.firstNameTooltipIcon.hover();
+      await page.waitForTimeout(2000);
+      await expect(signUpPage.firstNameTooltip)
+        .toHaveText(TOOLTIP_TEXTS.FIRST_NAME);
+
+      await signUpPage.lastNameTooltipIcon.hover();
+      await page.waitForTimeout(2000);  
+      await expect(signUpPage.lastNameTooltip)
+        .toHaveText(TOOLTIP_TEXTS.LAST_NAME);
+
+      await signUpPage.passwordInput.fill(Math.random().toString(36).slice(-12));
+
+      await signUpPage.showPwdTooltipIcon.hover();
+      await page.waitForTimeout(2000);  
+      await expect(signUpPage.hidePwdTooltip)
+        .toHaveText(TOOLTIP_TEXTS.SHOW_PASSWORD);
+      
+      await signUpPage.clickTogglePassword();
+      await signUpPage.passwordInput.click();
+      await signUpPage.hidePwdTooltipIcon.hover();
+      await page.waitForTimeout(2000);  
+      await expect(signUpPage.hidePwdTooltip)
+        .toHaveText(TOOLTIP_TEXTS.HIDE_PASSWORD);
+    });
   });
 });
