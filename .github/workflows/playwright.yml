@@ -20,14 +20,16 @@ jobs:
     - name: Run Playwright tests
       run: npx playwright test --reporter=html
 
-    - name: Upload Playwright report to GitHub Pages artifact
-      if: ${{ always() }}
-      uses: actions/upload-pages-artifact@v3
-      with:
-        path: playwright-report
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
