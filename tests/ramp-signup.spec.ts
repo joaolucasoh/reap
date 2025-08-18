@@ -13,7 +13,7 @@ test.describe('Ramp Sign Up', () => {
   test.describe('Sign Up Page', () => {
     test('should display sign up form with all required fields', async ({ page }) => {
       const hasHeading = await signUpPage.hasApplyForRampHeading();
-      expect(hasHeading).toBe(true);
+      expect(hasHeading).toBeVisible();
 
       await signUpPage.verifyRequiredFieldsPresent();
     });
@@ -30,7 +30,7 @@ test.describe('Ramp Sign Up', () => {
 
       for (const email of invalidEmails) {
         const isInvalid = await signUpPage.testInvalidEmail(email);
-        expect(isInvalid, `The email "${email}" didn't shows the expected error message.`).toBeTruthy();
+        expect(isInvalid).toBeTruthy();
       }
     });
 
@@ -89,7 +89,7 @@ test.describe('Ramp Sign Up', () => {
       expect(await signUpPage.getVerifyYourEmailMsg(emailCreated)).toBeTruthy();
     });
 
-    test.only('should display tooltip messages', async ( { page }) => {
+    test('should display tooltip messages', async ( { page }) => {
       await signUpPage.emailTooltipIcon.hover();
       await page.waitForTimeout(2000);
       await expect(signUpPage.emailTooltip)

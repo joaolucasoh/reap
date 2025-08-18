@@ -25,7 +25,7 @@ export class SignUpPage extends BasePage {
   passwordInput: Locator;
 
   constructor(page: Page) {
-    super(page, 'https://app.ramp.com');
+    super(page);
     
     this.emailInput = this.page.locator('input[type="email"]');
     this.firstNameInput = this.page.getByLabel(/first name/i);
@@ -49,6 +49,7 @@ export class SignUpPage extends BasePage {
 
   async navigate() {
     await this.goto('/sign-up');
+    // await this.page.waitForLoadState('networkidle');
   }
 
   async verifyRequiredFieldsPresent() {
@@ -90,7 +91,7 @@ export class SignUpPage extends BasePage {
     return { heading, message, link };
   }
   async getVerifyYourEmailMsg(emailCreated: string, timeout = 30000): Promise<boolean> {
-    const { heading, message, link } = this.getVerifyYourEmailLocators(emailCreated);
+    const { heading, message, link } = await this.getVerifyYourEmailLocators(emailCreated);
 
     try {
       await Promise.all([
@@ -265,9 +266,8 @@ async getInputType(): Promise<string | null> {
     return bodyVisible && hasMainContent;
   }
 
-  async hasApplyForRampHeading(): Promise<boolean> {
-    const heading = this.page.locator('h2:has-text("Apply for Ramp")');
-    return await heading.isVisible();
+  async hasApplyForRampHeading() {
+    return this.page.locator('h2:has-text("Apply for Ramp")');
   }
 
   async hasValidationIcons(): Promise<boolean> {
