@@ -18,7 +18,13 @@ jobs:
     - name: Install Playwright Browsers
       run: npx playwright install --with-deps
     - name: Run Playwright tests
-      run: npx playwright test
+      run: npx playwright test --reporter=html
+
+    - name: Upload Playwright report to GitHub Pages artifact
+      if: ${{ always() }}
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: playwright-report
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
