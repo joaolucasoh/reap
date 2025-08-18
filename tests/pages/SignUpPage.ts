@@ -244,28 +244,6 @@ async getInputType(): Promise<string | null> {
     return bodyWidth <= viewportWidth;
   }
 
-  async measureLoadTime(): Promise<number> {
-    const startTime = Date.now();
-    await this.navigate();
-    await this.page.waitForLoadState('networkidle');
-    return Date.now() - startTime;
-  }
-
-  async hasProperPageStructure(): Promise<boolean> {
-    const body = this.page.locator('body');
-    const main = this.page.locator('main, .main, #main');
-    
-    const bodyVisible = await body.isVisible();
-    
-    const mainCount = await main.count();
-    const formCount = await this.page.locator('form').count();
-    const containerCount = await this.page.locator('.container').count();
-    
-    const hasMainContent = mainCount > 0 || formCount > 0 || containerCount > 0;
-    
-    return bodyVisible && hasMainContent;
-  }
-
   async hasApplyForRampHeading() {
     return this.page.locator('h2:has-text("Apply for Ramp")');
   }

@@ -34,6 +34,13 @@ test.describe('Ramp Sign Up', () => {
       }
     });
 
+    test('should validate filling with personal email instead of work email', async ({ page }) => {
+      await signUpPage.fillEmail('test@outlook.com');
+      await signUpPage.submitForm();
+
+      expect(page.getByText('Enter a valid business email (not outlook.com)')).toBeVisible();
+    });
+
     test('should validate password requirements', async () => {
       for (const ds of PASSWORD_DATASETS) {
         const got = await signUpPage.testWeakPassword(ds.password);
