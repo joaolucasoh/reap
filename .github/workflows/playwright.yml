@@ -19,10 +19,21 @@ jobs:
       run: npx playwright install --with-deps
     - name: Run Playwright tests
       run: npx playwright test --reporter=html
+      continue-on-error: true
+    - name: Upload Playwright report to GitHub Pages artifact
+      if: ${{ always() }}
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: playwright-report
+
+    - name: Fail job if tests failed
+      if: ${{ steps.tests.outcome == 'failure' }}
+      run: exit 1
 
   deploy:
     needs: test
     runs-on: ubuntu-latest
+    if: ${{ always() }}
     permissions:
       pages: write
       id-token: write
