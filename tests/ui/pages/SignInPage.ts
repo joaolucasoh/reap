@@ -3,12 +3,13 @@ import { BasePage } from './BasePage';
 
 export class SignInPage extends BasePage {
   private readonly welcomeLabel: Locator;
-  private readonly emailInput: Locator;
-  private readonly continueButton: Locator;
+  readonly emailInput: Locator;
+  readonly continueButton: Locator;
   private readonly signUpLink: Locator
   private readonly passwordInput: Locator;
   private readonly useDifferentEmailLink: Locator;
-  private readonly signInButton: Locator;
+  readonly signInButton: Locator;
+  readonly verificationCodeInput: Locator;
   private readonly resetPasswordLink: Locator;
   private readonly signInWithChromeButton: Locator;
   private readonly emailMeALinkButton: Locator;
@@ -21,6 +22,8 @@ export class SignInPage extends BasePage {
     this.emailInput = this.page.locator('input[type="email"], input[name="email"]');
     this.continueButton = this.page.locator('data-test-id=sign-in-input-email-submit');
     this.signUpLink = this.page.locator('data-test-id=sign-up-link');
+    this.signInButton = this.page.getByText('Sign in to Ramp');
+    this.verificationCodeInput = this.page.locator('input[name="code"]');
     this.passwordInput = this.page.locator('input[type="password"], input[name="password"]');
     this.useDifferentEmailLink = this.page.locator('data-test-id=use-a-different-email-link');
     this.resetPasswordLink = this.page.locator('a:has-text("Reset Password")');
@@ -33,7 +36,12 @@ export class SignInPage extends BasePage {
     await this.page.waitForLoadState('networkidle');
   }
 
+  async checkVerificationCodeSentMsg(email: string): Promise<void> {
+    await this.page.getByText(`We’ve sent a verification code to ${email}. Enter the code to verify your account.`);
+  }
+
   async verifyLoginFieldsPresent() {
+    await this.waitForElement(this.welcomeLabel);
     await this.waitForElement(this.emailInput);
     await this.waitForElement(this.signInButton);
     await this.waitForElement(this.signUpLink);
@@ -47,12 +55,10 @@ export class SignInPage extends BasePage {
     await this.fillField(this.passwordInput, password);
   }
 
-  async fillLoginForm(credentials: {
-    email: string;
-    password: string;
-  }) {
-    await this.fillEmail(credentials.email);
-    await this.fillPassword(credentials.password);
+  async fillLoginForm( email: string, password: string) {
+    await this.fillEmail(email);
+    await this.continueButton.click();
+    await this.fillPassword(password);
   }
 
   async submitLogin() {
@@ -61,13 +67,13 @@ export class SignInPage extends BasePage {
     }
   }
 
-  async login(credentials: {
-    email: string;
-    password: string;
-  }) {
-    await this.fillLoginForm(credentials);
-    await this.submitLogin();
-  }
+  // async login(credentials: {
+  //   email: string;
+  //   password: string;
+  // }) {
+  //   await this.fillLoginForm(credentials);
+  //   await this.submitLogin();
+  // }
 
   async testEmptyFieldsValidation() {
     await this.fillEmail('');

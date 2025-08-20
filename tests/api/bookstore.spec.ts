@@ -1,9 +1,9 @@
 // tests/api/bookstore.spec.ts
 import { test, expect } from '@playwright/test';
-import { DemoqaClient } from '../utils/demoqaClient';
-import { uniqueUser } from '../utils/dataFactory';
-import { BooksListSchema, BookSchema } from '../utils/schemas';
-import { within } from '../utils/time';
+import { DemoqaClient } from '../api/utils/demoqaClient';
+import { uniqueUser } from '../api/utils/dataFactory';
+import { BooksListSchema, BookSchema } from '../api/utils/schemas';
+import { within } from '../api/utils/time';
 
 const BASE = 'https://demoqa.com';
 

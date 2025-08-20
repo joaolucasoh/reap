@@ -1,7 +1,7 @@
 // tests/api/account.spec.ts
 import { test, expect } from '@playwright/test';
-import { DemoqaClient } from '../utils/demoqaClient';
-import { uniqueUser } from '../utils/dataFactory';
+import { DemoqaClient } from '../api/utils/demoqaClient';
+import { uniqueUser } from '../api/utils/dataFactory';
 
 const BASE = 'https://demoqa.com';
 

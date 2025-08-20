@@ -1,6 +1,6 @@
 import { Page, Locator } from '@playwright/test';
 import { BasePage } from './BasePage';
-import { PASSWORD_RULES, type RuleText } from './index';
+import { PASSWORD_RULES, type RuleText } from '../index';
 
 export class SignUpPage extends BasePage {
   private readonly emailInput: Locator;

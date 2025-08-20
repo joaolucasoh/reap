@@ -3,9 +3,9 @@
  * Facilita a importação das páginas nos testes
  */
 
-export { BasePage } from './BasePage';
-export { SignUpPage } from './SignUpPage';
-export { SignInPage } from './SignInPage';
+export { BasePage } from './pages/BasePage';
+export { SignUpPage } from './pages/SignUpPage';
+export { SignInPage } from './pages/SignInPage';
 
 // Tipos para dados de teste
 export interface UserData {
@@ -28,6 +28,17 @@ export const TEST_DATA = {
     lastName: 'Silva',
     password: 'MinhaSenh@123456'
   },
+
+  PROD_USER: {
+    email: 'joao.hilario.external@tkelevator.com',
+    password: 'Mudar@22112020'
+  },
+
+  INCOMPLETE_USER: {
+    email: 'joao@raven.com',
+    password: 'Mudar@22112020'
+  },
+
   INVALID_EMAIL: 'email-invalido',
   WEAK_PASSWORD: '123',
   TEST_CREDENTIALS: {

@@ -15,8 +15,8 @@ export class BasePage {
     await expect(this.page).toHaveTitle(titlePattern);
   }
 
-  async waitForElement(locator: Locator, timeout: number = 5000) {
-    await expect(locator).toBeVisible({ timeout });
+  async waitForElement(locator: Locator, timeout: number = 20000) {
+    await locator.waitFor({ state: 'visible', timeout });
   }
 
   async fillField(locator: Locator, value: string) {

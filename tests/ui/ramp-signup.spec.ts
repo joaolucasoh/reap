@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { SignUpPage, SignInPage, TEST_DATA } from './pages';
-import { TOOLTIP_TEXTS, PASSWORD_DATASETS, PASSWORD_RULES, type RuleText } from './pages/index';
+import { SignUpPage } from '../ui/pages/SignUpPage';
+import { TEST_DATA, TOOLTIP_TEXTS, PASSWORD_DATASETS, PASSWORD_RULES, type RuleText } from '../ui/index';
 
 test.describe('Ramp Sign Up', () => {
   let signUpPage: SignUpPage;
